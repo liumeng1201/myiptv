@@ -21,9 +21,22 @@ android {
         viewBinding = true
     }
 
+    signingConfigs {
+        create("common") {
+            storeFile = file("mytv.jks")
+            storePassword = "mytv123456"
+            keyAlias = "mytv"
+            keyPassword = "mytv123456"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("common")
+        }
         release {
             isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("common")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

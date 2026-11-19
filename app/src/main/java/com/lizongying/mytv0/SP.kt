@@ -64,10 +64,10 @@ object SP {
     const val DEFAULT_CHANNEL_NUM = false
     const val DEFAULT_TIME = true
     const val DEFAULT_BOOT_STARTUP = false
-    const val DEFAULT_CONFIG_URL = ""
+    const val DEFAULT_CONFIG_URL = "http://192.168.1.249:8080/m3u"
     const val DEFAULT_PROXY = ""
     const val DEFAULT_EPG =
-        "https://live.fanmingming.cn/e.xml,https://raw.githubusercontent.com/fanmingming/live/main/e.xml"
+        "http://192.168.1.249:8080/epg/epg.gz,https://live.fanmingming.cn/e.xml,https://raw.githubusercontent.com/fanmingming/live/main/e.xml"
     const val DEFAULT_CHANNEL = 0
     const val DEFAULT_SHOW_ALL_CHANNELS = false
     const val DEFAULT_COMPACT_MENU = true
@@ -79,7 +79,7 @@ object SP {
     const val DEFAULT_POSITION_GROUP = 1
     const val DEFAULT_POSITION = 0
     const val DEFAULT_REPEAT_INFO = true
-    const val DEFAULT_CONFIG_AUTO_LOAD = false
+    const val DEFAULT_CONFIG_AUTO_LOAD = true
     var DEFAULT_SOURCES = ""
 
     private lateinit var sp: SharedPreferences
@@ -97,10 +97,11 @@ object SP {
             .use {
                 val str = it.readText()
                 if (str.isNotEmpty()) {
+                    val decoded = if (Gua().verify(str)) Gua().decode(str) else str
                     DEFAULT_SOURCES = gson.toJson(
-                        Gua().decode(str).trim().split("\n").map { i ->
+                        decoded.trim().split("\n").filter { line -> line.isNotBlank() }.map { i ->
                             Source(
-                                uri = i
+                                uri = i.trim()
                             )
                         }, typeSourceList
                     ) ?: ""
