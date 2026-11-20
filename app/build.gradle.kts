@@ -67,18 +67,11 @@ fun getTag(): String {
 }
 
 fun getVersionCode(): Int {
-    return try {
-        val arr = (getTag().replace(".", " ").replace("-", " ") + " 0").split(" ")
-        arr[0].toInt() * 16777216 + arr[1].toInt() * 65536 + arr[2].toInt() * 256 + arr[3].toInt()
-    } catch (_: Exception) {
-        1
-    }
+    return 16976137
 }
 
 fun getVersionName(): String {
-    return getTag().ifEmpty {
-        "0.0.0-1"
-    }
+    return "1.3.9.9"
 }
 
 dependencies {

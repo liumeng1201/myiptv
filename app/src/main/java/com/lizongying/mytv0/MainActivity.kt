@@ -41,6 +41,7 @@ class MainActivity : AppCompatActivity() {
     private var menuFragment = MenuFragment()
     private var settingFragment = SettingFragment()
     private var programFragment = ProgramFragment()
+    private var routeFragment = RouteFragment()
 
     private val handler = Handler(Looper.myLooper()!!)
     private val delayHideMenu = 10 * 1000L
@@ -590,6 +591,10 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        if (routeFragment.isAdded && !routeFragment.isHidden) {
+            return
+        }
+
         if ((!menuFragment.isAdded || menuFragment.isHidden) && (!settingFragment.isAdded || settingFragment.isHidden)) {
             if (SP.channelReversal) {
                 next()
@@ -604,6 +609,10 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        if (routeFragment.isAdded && !routeFragment.isHidden) {
+            return
+        }
+
         if ((!menuFragment.isAdded || menuFragment.isHidden) && (!settingFragment.isAdded || settingFragment.isHidden)) {
             if (SP.channelReversal) {
                 prev()
@@ -614,6 +623,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun back() {
+        if (routeFragment.isAdded && !routeFragment.isHidden) {
+            hideFragment(routeFragment)
+            return
+        }
+
         if (menuFragment.isAdded && !menuFragment.isHidden) {
             hideFragment(menuFragment)
             return
@@ -649,6 +663,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showSetting() {
+        if (routeFragment.isAdded && !routeFragment.isHidden) {
+            hideFragment(routeFragment)
+            return
+        }
+
         if (programFragment.isAdded && !programFragment.isHidden) {
             return
         }
@@ -663,6 +682,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showProgram() {
+        if (routeFragment.isAdded && !routeFragment.isHidden) {
+            hideFragment(routeFragment)
+            return
+        }
+
         if (menuFragment.isAdded && !menuFragment.isHidden) {
             return
         }
@@ -679,6 +703,44 @@ class MainActivity : AppCompatActivity() {
         }
 
         showFragment(programFragment)
+    }
+
+    fun showRoute() {
+        if (menuFragment.isAdded && !menuFragment.isHidden) {
+            return
+        }
+
+        if (settingFragment.isAdded && !settingFragment.isHidden) {
+            return
+        }
+
+        if (programFragment.isAdded && !programFragment.isHidden) {
+            return
+        }
+
+        if (routeFragment.isAdded && !routeFragment.isHidden) {
+            hideFragment(routeFragment)
+            return
+        }
+
+        val tvModel = viewModel.groupModel.getCurrent()
+        if (tvModel == null || tvModel.tv.uris.isEmpty()) {
+            R.string.no_video_source.showToast()
+            return
+        }
+
+        showFragment(routeFragment)
+        routeFragment.onVisible()
+    }
+
+    fun switchRoute(index: Int) {
+        val tvModel = viewModel.groupModel.getCurrent() ?: return
+        tvModel.setVideoIndex(index)
+        tvModel.setReady(true)
+        tvModel.retryTimes = 0
+        tvModel.setErrInfo("")
+        playerFragment.play(tvModel)
+        infoFragment.show(tvModel)
     }
 
     private fun hideProgram(): Boolean {
@@ -722,6 +784,20 @@ class MainActivity : AppCompatActivity() {
 
     fun onKey(keyCode: Int): Boolean {
         Log.d(TAG, "keyCode $keyCode")
+
+        if (routeFragment.isAdded && !routeFragment.isHidden) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_BACK,
+                KeyEvent.KEYCODE_ESCAPE,
+                KeyEvent.KEYCODE_DPAD_LEFT,
+                KeyEvent.KEYCODE_DPAD_RIGHT,
+                KeyEvent.KEYCODE_MENU -> {
+                    hideFragment(routeFragment)
+                    return true
+                }
+            }
+        }
+
         when (keyCode) {
             KeyEvent.KEYCODE_0,
             KeyEvent.KEYCODE_1,
@@ -779,12 +855,20 @@ class MainActivity : AppCompatActivity() {
                     return true
                 }
 
+                if (routeFragment.isAdded && !routeFragment.isHidden) {
+                    return true
+                }
+
                 showFragment(menuFragment)
             }
 
             KeyEvent.KEYCODE_DPAD_CENTER -> {
                 if (channelFragment.isAdded && channelFragment.isVisible) {
                     channelFragment.playNow()
+                    return true
+                }
+
+                if (routeFragment.isAdded && !routeFragment.isHidden) {
                     return true
                 }
 
@@ -812,7 +896,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                showSetting()
+                showRoute()
             }
         }
         return false

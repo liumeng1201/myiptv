@@ -216,6 +216,19 @@ class TVModel(var tv: TV) : ViewModel() {
         return videoIndexValue == tv.uris.size - 1
     }
 
+    fun setVideoIndex(index: Int) {
+        if (tv.uris.isEmpty()) {
+            return
+        }
+
+        val validIndex = max(0, min(tv.uris.size - 1, index))
+        tv.videoIndex = validIndex
+        _videoIndex.value = validIndex
+        sourceTypeList = listOf(
+            SourceType.UNKNOWN,
+        )
+    }
+
     fun nextVideo(): Boolean {
         if (tv.uris.isEmpty()) {
             return false
