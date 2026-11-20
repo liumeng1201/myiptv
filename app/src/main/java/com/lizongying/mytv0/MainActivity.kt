@@ -855,6 +855,10 @@ class MainActivity : AppCompatActivity() {
                     return true
                 }
 
+                if (settingFragment.isAdded && !settingFragment.isHidden) {
+                    return false
+                }
+
                 if (routeFragment.isAdded && !routeFragment.isHidden) {
                     return true
                 }
@@ -866,6 +870,10 @@ class MainActivity : AppCompatActivity() {
                 if (channelFragment.isAdded && channelFragment.isVisible) {
                     channelFragment.playNow()
                     return true
+                }
+
+                if (settingFragment.isAdded && !settingFragment.isHidden) {
+                    return false
                 }
 
                 if (routeFragment.isAdded && !routeFragment.isHidden) {

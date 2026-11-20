@@ -39,7 +39,7 @@ class UpdateManager(
 
         for (u in urls) {
             Log.i(TAG, "request $u")
-            withContext(Dispatchers.IO) {
+            val result = withContext(Dispatchers.IO) {
                 try {
                     val request = okhttp3.Request.Builder().url(u).build()
                     val response = HttpClient.okHttpClient.newCall(request).execute()
@@ -57,6 +57,10 @@ class UpdateManager(
                 } catch (e: Exception) {
                     Log.e(TAG, "getRelease $u error: ${e.message}")
                 }
+                null
+            }
+            if (result != null) {
+                return result
             }
         }
 
