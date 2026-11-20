@@ -67,11 +67,11 @@ fun getTag(): String {
 }
 
 fun getVersionCode(): Int {
-    return 16976138
+    return 16976139
 }
 
 fun getVersionName(): String {
-    return "1.4.0"
+    return "1.4.1"
 }
 
 dependencies {
