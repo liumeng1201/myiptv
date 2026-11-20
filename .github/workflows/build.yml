@@ -36,12 +36,11 @@ jobs:
       - name: Build Release APK
         run: ./gradlew assembleRelease
 
-      - name: Prepare Assets and version.json
+      - name: Prepare Assets, Release Notes and version.json
         run: |
           mkdir -p dist
           APK_PATH=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
           cp "$APK_PATH" "dist/myiptv-${VERSION_NAME}.apk"
-          cp "$APK_PATH" "dist/myiptv-latest.apk"
           cat <<EOF > dist/version.json
           {
             "version_code": ${VERSION_CODE},
@@ -50,14 +49,22 @@ jobs:
             "apk_url": "https://github.com/liumeng1201/myiptv/releases/download/${TAG_NAME}/myiptv-${VERSION_NAME}.apk"
           }
           EOF
+          gh api "repos/${GITHUB_REPOSITORY}/releases/generate-notes" -f tag_name="${TAG_NAME}" --jq .body > dist/release_notes.md || true
+          if [ ! -s dist/release_notes.md ]; then
+            echo "**Full Changelog**: https://github.com/${GITHUB_REPOSITORY}/commits/${TAG_NAME}" > dist/release_notes.md
+          fi
           cat dist/version.json
           ls -lh dist/
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: myiptv-release-${{ env.VERSION_NAME }}
-          path: dist/*
+          path: |
+            dist/myiptv-${{ env.VERSION_NAME }}.apk
+            dist/version.json
           retention-days: 30
 
       - name: Publish GitHub Release
@@ -65,8 +72,10 @@ jobs:
         with:
           tag_name: ${{ env.TAG_NAME }}
           name: 看电视 ${{ env.TAG_NAME }}
-          files: dist/*
+          body_path: dist/release_notes.md
+          files: |
+            dist/myiptv-${{ env.VERSION_NAME }}.apk
+            dist/version.json
           make_latest: true
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
