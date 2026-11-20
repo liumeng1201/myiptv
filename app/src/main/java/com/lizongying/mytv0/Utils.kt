@@ -165,24 +165,26 @@ object Utils {
     fun getUrls(url: String): List<String> {
         return if (url.startsWith("https://raw.githubusercontent.com") || url.startsWith("https://github.com")) {
             listOf(
-                "https://gh.llkk.cc/",
-                "https://github.moeyy.xyz/",
+                "https://gh-proxy.com/",
                 "https://mirror.ghproxy.com/",
+                "https://ghfast.top/",
                 "https://ghproxy.cn/",
                 "https://ghproxy.net/",
-                "https://ghproxy.click/",
-                "https://ghproxy.com/",
-                "https://github.moeyy.cn/",
-                "https://gh-proxy.llyke.com/",
-                "https://www.ghproxy.cc/",
-                "https://cf.ghproxy.cc/",
-                "https://ghp.ci/",
-                "https://ghfast.top"
+                "https://github.moeyy.xyz/",
+                "https://gh.llkk.cc/",
             ).map {
                 "$it$url"
-            }
+            } + listOf(url)
         } else {
             listOf(url)
+        }
+    }
+
+    fun getProxyDownloadUrl(url: String): String {
+        return if (url.startsWith("https://github.com") || url.startsWith("https://raw.githubusercontent.com")) {
+            "https://gh-proxy.com/$url"
+        } else {
+            url
         }
     }
 }

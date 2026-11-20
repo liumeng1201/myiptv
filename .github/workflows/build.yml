@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android APK & Release
 
 on:
   push:
@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   build:
-    name: Build & Package APK
+    name: Build & Publish Release
     runs-on: ubuntu-latest
 
     steps:
@@ -30,27 +30,43 @@ jobs:
       - name: Make Gradle Wrapper Executable
         run: chmod +x gradlew
 
+      - name: Extract Version Info
+        run: python3 tools/extract_version.py
+
       - name: Build Release APK
         run: ./gradlew assembleRelease
 
-      - name: Prepare Artifact
+      - name: Prepare Assets and version.json
         run: |
           mkdir -p dist
-          cp app/build/outputs/apk/release/*.apk dist/
+          APK_PATH=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          cp "$APK_PATH" "dist/myiptv-${VERSION_NAME}.apk"
+          cp "$APK_PATH" "dist/myiptv-latest.apk"
+          cat <<EOF > dist/version.json
+          {
+            "version_code": ${VERSION_CODE},
+            "version_name": "${VERSION_NAME}",
+            "apk_name": "myiptv-${VERSION_NAME}.apk",
+            "apk_url": "https://github.com/liumeng1201/myiptv/releases/download/${TAG_NAME}/myiptv-${VERSION_NAME}.apk"
+          }
+          EOF
+          cat dist/version.json
           ls -lh dist/
 
-      - name: Upload APK Artifact
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: myiptv-release-apk
-          path: dist/*.apk
+          name: myiptv-release-${{ env.VERSION_NAME }}
+          path: dist/*
           retention-days: 30
 
-      - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*.apk
+          tag_name: ${{ env.TAG_NAME }}
+          name: 看电视 ${{ env.TAG_NAME }}
+          files: dist/*
+          make_latest: true
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

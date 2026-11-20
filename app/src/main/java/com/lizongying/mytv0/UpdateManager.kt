@@ -35,7 +35,7 @@ class UpdateManager(
     var release: ReleaseResponse? = null
 
     private suspend fun getRelease(): ReleaseResponse? {
-        val urls = getUrls(VERSION_URL)
+        val urls = (getUrls(VERSION_URL) + getUrls(VERSION_URL_FALLBACK)).distinct()
 
         for (u in urls) {
             Log.i(TAG, "request $u")
@@ -55,8 +55,7 @@ class UpdateManager(
                         Log.e(TAG, "getRelease $u ${response.codeAlias()}")
                     }
                 } catch (e: Exception) {
-//                    Log.e(TAG, "getRelease $u error", e)
-                    Log.e(TAG, "getRelease $u error")
+                    Log.e(TAG, "getRelease $u error: ${e.message}")
                 }
             }
         }
@@ -73,8 +72,8 @@ class UpdateManager(
                 release = getRelease()
                 Log.i(TAG, "versionCode $versionCode ${release?.version_code}")
                 if (release?.version_code != null) {
-                    if (release?.version_code!! >= versionCode) {
-                        text = "最新版本：${release?.version_name}"
+                    if (release?.version_code!! > versionCode) {
+                        text = "发现新版本：${release?.version_name}"
                         update = true
                     } else {
                         text = "已是最新版本，不需要更新"
@@ -99,8 +98,10 @@ class UpdateManager(
 
         val downloadManager =
             context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+        val downloadUrl = Utils.getProxyDownloadUrl(release.apk_url)
+        Log.i(TAG, "startDownload url: $downloadUrl")
         val request =
-            Request(Uri.parse(release.apk_url))
+            Request(Uri.parse(downloadUrl))
         context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)?.mkdirs()
         Log.i(TAG, "save dir ${Environment.DIRECTORY_DOWNLOADS}")
         request.setDestinationInExternalFilesDir(
@@ -255,6 +256,8 @@ class UpdateManager(
         private const val TAG = "UpdateManager"
         private const val BUFFER_SIZE = 8192
         private const val VERSION_URL =
+            "https://github.com/liumeng1201/myiptv/releases/latest/download/version.json"
+        private const val VERSION_URL_FALLBACK =
             "https://raw.githubusercontent.com/liumeng1201/myiptv/main/version.json"
     }
 
