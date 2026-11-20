@@ -35,6 +35,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.InputStream
+import kotlin.math.max
+import kotlin.math.min
 
 
 class MainViewModel : ViewModel() {
@@ -473,6 +475,9 @@ class MainViewModel : ViewModel() {
                 for ((_, tv) in tvMap) {
                     val uris = tv.map { t -> t.uris }.flatten()
                     val t0 = tv[0]
+                    val channelKey = t0.title.ifEmpty { t0.name }
+                    val savedIndex = SP.getChannelRoute(channelKey)
+                    val initialIndex = if (uris.isNotEmpty()) max(0, min(uris.size - 1, savedIndex)) else 0
                     val t1 = TV(
                         -1,
                         t0.name,
@@ -481,7 +486,7 @@ class MainViewModel : ViewModel() {
                         t0.logo,
                         "",
                         uris,
-                        0,
+                        initialIndex,
                         t0.headers,
                         t0.group,
                         SourceType.UNKNOWN,
@@ -523,15 +528,18 @@ class MainViewModel : ViewModel() {
                 for ((title, uris) in tvMap) {
                     val channelGroup = uris.first();
                     uris.drop(1);
+                    val channelTitle = title.removePrefix(channelGroup)
+                    val savedIndex = SP.getChannelRoute(channelTitle)
+                    val initialIndex = if (uris.isNotEmpty()) max(0, min(uris.size - 1, savedIndex)) else 0
                     val tv = TV(
                         -1,
                         "",
-                        title.removePrefix(channelGroup),
+                        channelTitle,
                         "",
                         "",
                         "",
                         uris,
-                        0,
+                        initialIndex,
                         emptyMap(),
                         channelGroup,
                         SourceType.UNKNOWN,

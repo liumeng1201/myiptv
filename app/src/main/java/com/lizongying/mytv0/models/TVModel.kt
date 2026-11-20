@@ -97,6 +97,12 @@ class TVModel(var tv: TV) : ViewModel() {
             setErrInfo("")
             retryTimes = 0
 
+            val channelKey = tv.title.ifEmpty { tv.name }
+            if (channelKey.isNotEmpty() && tv.uris.isNotEmpty()) {
+                val savedIndex = SP.getChannelRoute(channelKey)
+                tv.videoIndex = max(0, min(tv.uris.size - 1, savedIndex))
+            }
+
             _videoIndex.value = max(0, min(tv.uris.size - 1, tv.videoIndex))
             sourceTypeIndex =
                 max(0, min(sourceTypeList.size - 1, sourceTypeList.indexOf(tv.sourceType)))
@@ -170,6 +176,10 @@ class TVModel(var tv: TV) : ViewModel() {
 
     fun confirmVideoIndex() {
         tv.videoIndex = videoIndexValue
+        val channelKey = tv.title.ifEmpty { tv.name }
+        if (channelKey.isNotEmpty()) {
+            SP.setChannelRoute(channelKey, videoIndexValue)
+        }
     }
 
     @OptIn(UnstableApi::class)
@@ -227,6 +237,10 @@ class TVModel(var tv: TV) : ViewModel() {
         sourceTypeList = listOf(
             SourceType.UNKNOWN,
         )
+        val channelKey = tv.title.ifEmpty { tv.name }
+        if (channelKey.isNotEmpty()) {
+            SP.setChannelRoute(channelKey, validIndex)
+        }
     }
 
     fun nextVideo(): Boolean {
@@ -247,6 +261,11 @@ class TVModel(var tv: TV) : ViewModel() {
     }
 
     init {
+        val channelKey = tv.title.ifEmpty { tv.name }
+        if (channelKey.isNotEmpty() && tv.uris.isNotEmpty()) {
+            val savedIndex = SP.getChannelRoute(channelKey)
+            tv.videoIndex = max(0, min(tv.uris.size - 1, savedIndex))
+        }
         _videoIndex.value = max(0, min(tv.uris.size - 1, tv.videoIndex))
         _like.value = SP.getLike(tv.id)
     }

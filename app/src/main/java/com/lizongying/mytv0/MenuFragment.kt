@@ -174,6 +174,7 @@ class MenuFragment : Fragment(), GroupAdapter.ItemListener, ListAdapter.ItemList
             return
         }
 
+        viewModel.groupModel.getCurrent()?.confirmVideoIndex()
         viewModel.groupModel.setPositionPlaying()
         viewModel.groupModel.getCurrentList()?.let {
             it.setPosition(position)

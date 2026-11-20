@@ -60,6 +60,8 @@ object SP {
 
     private const val KEY_SOFT_DECODE = "soft_decode"
 
+    private const val KEY_CHANNEL_ROUTE_PREFIX = "channel_route_"
+
     const val DEFAULT_CHANNEL_REVERSAL = false
     const val DEFAULT_CHANNEL_NUM = false
     const val DEFAULT_TIME = true
@@ -196,6 +198,26 @@ object SP {
 
     fun deleteLike() {
         sp.edit().remove(KEY_LIKE).apply()
+    }
+
+    fun getChannelRoute(title: String): Int {
+        if (title.isBlank()) return 0
+        return sp.getInt("$KEY_CHANNEL_ROUTE_PREFIX$title", 0)
+    }
+
+    fun setChannelRoute(title: String, routeIndex: Int) {
+        if (title.isBlank()) return
+        sp.edit().putInt("$KEY_CHANNEL_ROUTE_PREFIX$title", routeIndex).apply()
+    }
+
+    fun deleteChannelRoutes() {
+        val editor = sp.edit()
+        for (key in sp.all.keys) {
+            if (key.startsWith(KEY_CHANNEL_ROUTE_PREFIX)) {
+                editor.remove(key)
+            }
+        }
+        editor.apply()
     }
 
     var proxy: String?

@@ -316,6 +316,9 @@ class SettingFragment : Fragment() {
             SP.deleteLike()
             Log.i(TAG, "clear like")
 
+            SP.deleteChannelRoutes()
+            Log.i(TAG, "clear channel routes")
+
 //            SP.positionGroup = SP.DEFAULT_POSITION_GROUP
 //            viewModel.groupModel.setPosition(SP.DEFAULT_POSITION_GROUP)
 //            viewModel.groupModel.setPositionPlaying(SP.DEFAULT_POSITION_GROUP)

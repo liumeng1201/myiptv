@@ -437,6 +437,7 @@ class MainActivity : AppCompatActivity() {
     fun play(position: Int): Boolean {
         return if (position > -1 && position < viewModel.groupModel.getAllList()!!.size()) {
             val prevGroup = viewModel.groupModel.positionValue
+            viewModel.groupModel.getCurrent()?.confirmVideoIndex()
             val tvModel = viewModel.groupModel.getPosition(position)
 
             tvModel?.setReady()
@@ -455,6 +456,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun prev() {
+        viewModel.groupModel.getCurrent()?.confirmVideoIndex()
         val prevGroup = viewModel.groupModel.positionValue
         val tvModel =
             if (SP.defaultLike && viewModel.groupModel.isInLikeMode && viewModel.groupModel.getFavoritesList() != null
@@ -475,6 +477,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun next() {
+        viewModel.groupModel.getCurrent()?.confirmVideoIndex()
         val prevGroup = viewModel.groupModel.positionValue
         val tvModel =
             if (SP.defaultLike && viewModel.groupModel.isInLikeMode && viewModel.groupModel.getFavoritesList() != null
@@ -736,6 +739,7 @@ class MainActivity : AppCompatActivity() {
     fun switchRoute(index: Int) {
         val tvModel = viewModel.groupModel.getCurrent() ?: return
         tvModel.setVideoIndex(index)
+        tvModel.confirmVideoIndex()
         tvModel.setReady(true)
         tvModel.retryTimes = 0
         tvModel.setErrInfo("")
@@ -930,6 +934,16 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
 
         isSafeToPerformFragmentTransactions = false
+        if (this::viewModel.isInitialized) {
+            viewModel.groupModel.getCurrent()?.confirmVideoIndex()
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (this::viewModel.isInitialized) {
+            viewModel.groupModel.getCurrent()?.confirmVideoIndex()
+        }
     }
 
     override fun onDestroy() {
