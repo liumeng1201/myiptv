@@ -6,13 +6,17 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.database.Cursor
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.fragment.app.FragmentActivity
 import com.lizongying.mytv0.Utils.getUrls
 import com.lizongying.mytv0.data.Global.gson
@@ -100,14 +104,19 @@ class UpdateManager(
             return
         }
 
+        val downloadDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+        downloadDir?.mkdirs()
+        val existingFile = File(downloadDir, release.apk_name)
+        if (existingFile.exists()) {
+            existingFile.delete()
+        }
+
         val downloadManager =
             context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         val downloadUrl = Utils.getProxyDownloadUrl(release.apk_url)
         Log.i(TAG, "startDownload url: $downloadUrl")
         val request =
             Request(Uri.parse(downloadUrl))
-        context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)?.mkdirs()
-        Log.i(TAG, "save dir ${Environment.DIRECTORY_DOWNLOADS}")
         request.setDestinationInExternalFilesDir(
             context,
             Environment.DIRECTORY_DOWNLOADS,
@@ -124,12 +133,12 @@ class UpdateManager(
         downloadReceiver = DownloadReceiver(context, release.apk_name, downloadReference)
 
         val intentFilter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.registerReceiver(downloadReceiver, intentFilter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            context.registerReceiver(downloadReceiver, intentFilter)
-        }
+        ContextCompat.registerReceiver(
+            context,
+            downloadReceiver,
+            intentFilter,
+            ContextCompat.RECEIVER_EXPORTED
+        )
 
         getDownloadProgress(context, downloadReference) { progress ->
             println("Download progress: $progress%")
@@ -239,19 +248,66 @@ class UpdateManager(
                 context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
                 apkFileName
             )
-            Log.i(TAG, "apkFile $apkFile")
+            Log.i(TAG, "apkFile $apkFile, exists: ${apkFile.exists()}, length: ${apkFile.length()}")
 
-            if (apkFile.exists()) {
-                val apkUri = Uri.parse("file://$apkFile")
+            if (!apkFile.exists() || apkFile.length() <= 0) {
+                Log.e(TAG, "APK file does not exist or is empty!")
+                "安装包下载失败或文件异常".showToast()
+                return
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (!context.packageManager.canRequestPackageInstalls()) {
+                    try {
+                        "请开启允许安装未知应用权限".showToast()
+                        val permissionIntent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                            data = Uri.parse("package:${context.packageName}")
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        context.startActivity(permissionIntent)
+                        return
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to start ACTION_MANAGE_UNKNOWN_APP_SOURCES", e)
+                    }
+                }
+            }
+
+            try {
+                val apkUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.fileprovider",
+                        apkFile
+                    )
+                } else {
+                    Uri.fromFile(apkFile)
+                }
+
                 Log.i(TAG, "apkUri $apkUri")
                 val installIntent = Intent(Intent.ACTION_VIEW).apply {
                     setDataAndType(apkUri, "application/vnd.android.package-archive")
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
 
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    val resolveInfoList = context.packageManager.queryIntentActivities(
+                        installIntent,
+                        PackageManager.MATCH_DEFAULT_ONLY
+                    )
+                    for (resolveInfo in resolveInfoList) {
+                        val packageName = resolveInfo.activityInfo.packageName
+                        context.grantUriPermission(
+                            packageName,
+                            apkUri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
+                    }
+                }
+
                 context.startActivity(installIntent)
-            } else {
-                Log.e(TAG, "APK file does not exist!")
+            } catch (e: Exception) {
+                Log.e(TAG, "installNewVersion failed", e)
+                "启动安装界面失败：${e.message}".showToast()
             }
         }
     }
