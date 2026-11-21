@@ -5,14 +5,15 @@
     android:id="@+id/sources"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:background="@color/blur"
     >
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/content"
             android:layout_width="600dp"
-            android:layout_height="400dp"
+            android:layout_height="350dp"
             android:layout_gravity="center"
             android:gravity="center"
-            android:textColor="@color/blur"
+            android:textColor="@color/title_blur"
             android:textStyle="normal"
             android:textSize="14sp"
             tools:text="暂无视频源"
@@ -25,11 +26,26 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/list"
             android:layout_width="600dp"
-            android:layout_height="400dp"
+            android:layout_height="350dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             >
         </androidx.recyclerview.widget.RecyclerView>
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/server_address"
+            android:layout_width="600dp"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:gravity="center"
+            android:textColor="@color/description_blur"
+            android:textSize="14sp"
+            tools:text="远程设置地址：http://192.168.1.5:34567"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/list"
+            app:layout_constraintBottom_toBottomOf="parent"
+            />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

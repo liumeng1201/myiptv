@@ -12,6 +12,7 @@ import android.view.WindowManager
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.lizongying.mytv0.SimpleServer.Companion.PORT
 import com.lizongying.mytv0.databinding.SourcesBinding
 
 
@@ -58,6 +59,12 @@ class SourcesFragment : DialogFragment(), SourcesAdapter.ItemListener {
             LinearLayoutManager(context)
         val listWidth = application.px2Px(binding.list.layoutParams.width)
         binding.list.layoutParams.width = listWidth
+        binding.content.layoutParams.width = listWidth
+        binding.serverAddress.layoutParams.width = listWidth
+        binding.serverAddress.textSize = application.px2PxFont(binding.serverAddress.textSize)
+
+        val server = "http://${PortUtil.lan()}:$PORT"
+        binding.serverAddress.text = "远程设置地址：$server"
         sourcesAdapter.setItemListener(this)
         sourcesAdapter.toPosition(if (viewModel.sources.checkedValue > -1) viewModel.sources.checkedValue else 0)
 
